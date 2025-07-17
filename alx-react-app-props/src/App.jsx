@@ -1,7 +1,7 @@
 // src/App.jsx - Final Refactored Code
 import React from 'react';
-import ProfilePage from './ProfilePage';
-import UserContext from './UserContext';
+import ProfilePage from './components/ProfilePage';
+import UserContext from './components/UserContext';
 import './App.css';
 
 function App() {
