@@ -3,10 +3,10 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom'; // Import router components
 
 // Import our page components
-import Home from './Home';
-import About from './About';
-import Services from './Services';
-import Contact from './Contact';
+import Home from './components/Home';
+import About from './components/About';
+import Services from './components/Services';
+import Contact from './components/Contact';
 
 // Import our Navbar and Footer components
 import Navbar from './components/Navbar';
