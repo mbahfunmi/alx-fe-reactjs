@@ -1,31 +1,42 @@
 // src/components/RecipeList.jsx
-import React from 'react';
-import { Link } from 'react-router-dom'; // Import Link
+import React, { useEffect } from 'react'; // Import useEffect
+import { Link } from 'react-router-dom';
 import useRecipeStore from './recipeStore';
 
 const RecipeList = () => {
-  const recipes = useRecipeStore(state => state.recipes);
+  // Select filteredRecipes and the filterRecipes action
+  const filteredRecipes = useRecipeStore(state => state.filteredRecipes);
+  const recipes = useRecipeStore(state => state.recipes); // Also get full recipes to trigger initial filter
+  const filterRecipes = useRecipeStore(state => state.filterRecipes);
+
+  // Use useEffect to trigger initial filtering or re-filtering if recipes change
+  useEffect(() => {
+    filterRecipes();
+  }, [recipes, filterRecipes]); // Re-run when 'recipes' array changes or filterRecipes itself changes (unlikely)
 
   return (
     <div style={{ marginTop: '40px' }}>
       <h2 style={{ color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>Your Recipes</h2>
-      {recipes.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#666', marginTop: '20px' }}>No recipes added yet. Add some delicious recipes!</p>
+      {filteredRecipes.length === 0 ? (
+        <p style={{ textAlign: 'center', color: '#666', marginTop: '20px' }}>
+          {/* Conditional message based on whether there's a search term */}
+          {useRecipeStore.getState().searchTerm ? "No recipes match your search criteria." : "No recipes added yet. Add some delicious recipes!"}
+        </p>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          {recipes.map(recipe => (
+          {filteredRecipes.map(recipe => (
             <Link
-              to={`/recipe/${recipe.id}`} // Link to the recipe details page
+              to={`/recipe/${recipe.id}`}
               key={recipe.id}
               style={{
-                textDecoration: 'none', // Remove underline from link
+                textDecoration: 'none',
                 color: 'inherit',
                 border: '1px solid #e0e0e0',
                 borderRadius: '8px',
                 padding: '15px',
                 boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
                 transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                display: 'block' // Make the whole div clickable
+                display: 'block'
               }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)'; }}
