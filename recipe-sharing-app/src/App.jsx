@@ -4,7 +4,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RecipeList from './components/RecipeList';
 import AddRecipeForm from './components/AddRecipeForm';
 import RecipeDetails from './components/RecipeDetails';
-import SearchBar from './components/SearchBar'; // Import the new SearchBar component
+import SearchBar from './components/SearchBar';
+import FavoritesList from './components/FavoritesList'; // Import new component
+import RecommendationsList from './components/RecommendationsList'; // Import new component
 
 function App() {
   return (
@@ -16,8 +18,10 @@ function App() {
           {/* Route for the home page (Recipe List and Add Form) */}
           <Route path="/" element={
             <>
-              <SearchBar /> {/* Render the SearchBar here */}
+              <SearchBar />
               <AddRecipeForm />
+              <FavoritesList /> {/* Render FavoritesList */}
+              <RecommendationsList /> {/* Render RecommendationsList */}
               <RecipeList />
             </>
           } />

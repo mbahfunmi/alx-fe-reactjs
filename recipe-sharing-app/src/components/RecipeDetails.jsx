@@ -1,27 +1,34 @@
 // src/components/RecipeDetails.jsx
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Import useParams and useNavigate
+import { useParams, useNavigate } from 'react-router-dom';
 import useRecipeStore from './recipeStore';
-import EditRecipeForm from './EditRecipeForm'; // Will be created next
-import DeleteRecipeButton from './DeleteRecipeButton'; // Will be created next
+import EditRecipeForm from './EditRecipeForm';
+import DeleteRecipeButton from './DeleteRecipeButton';
 
 const RecipeDetails = () => {
-  // useParams hook to get the recipeId from the URL
   const { recipeId } = useParams();
-  const navigate = useNavigate(); // Hook to programmatically navigate
+  const navigate = useNavigate();
 
-  // Convert recipeId from string (from URL) to number
   const id = parseInt(recipeId, 10);
 
-  // Select the specific recipe from the store
   const recipe = useRecipeStore(state =>
     state.recipes.find(r => r.id === id)
   );
+  const favorites = useRecipeStore(state => state.favorites); // Get favorites
+  const addFavorite = useRecipeStore(state => state.addFavorite); // Action
+  const removeFavorite = useRecipeStore(state => state.removeFavorite); // Action
 
-  // State to toggle between viewing details and editing form
   const [isEditing, setIsEditing] = React.useState(false);
 
-  // If recipe is not found (e.g., invalid ID in URL), redirect
+  // Function to toggle favorite status
+  const toggleFavorite = () => {
+    if (favorites.includes(recipe.id)) {
+      removeFavorite(recipe.id);
+    } else {
+      addFavorite(recipe.id);
+    }
+  };
+
   if (!recipe) {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -37,15 +44,31 @@ const RecipeDetails = () => {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '20px auto', border: '1px solid #eee', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '20px auto', border: '1px solid #eee', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', backgroundColor: '#fff' }}>
       {isEditing ? (
-        // Render the EditRecipeForm when isEditing is true
         <EditRecipeForm recipe={recipe} setIsEditing={setIsEditing} />
       ) : (
-        // Render recipe details when not editing
         <>
-          <h1 style={{ color: '#333', marginBottom: '10px' }}>{recipe.title}</h1>
-          <p style={{ color: '#666', lineHeight: '1.6' }}>{recipe.description}</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <h1 style={{ color: '#333', margin: 0 }}>{recipe.title}</h1>
+            <button
+              onClick={toggleFavorite}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: favorites.includes(recipe.id) ? '#ffc107' : '#ccc',
+                fontSize: '2.5em',
+                padding: '0',
+                lineHeight: '1',
+                transition: 'color 0.2s ease, transform 0.2s ease'
+              }}
+              title={favorites.includes(recipe.id) ? "Remove from Favorites" : "Add to Favorites"}
+            >
+              &#9733; {/* Unicode star character */}
+            </button>
+          </div>
+          <p style={{ color: '#666', lineHeight: '1.6', marginBottom: '20px' }}>{recipe.description}</p>
 
           <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
             <button
