@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { SearchIcon, Loader2, UserRound, Users, GitPullRequest, MapPin, Link as LinkIcon, Building } from 'lucide-react';
 
-// Reusable UI components for a clean, modern look.
+// Reusable UI components
 const Card = ({ children, className = '' }) => (
   <div className={`rounded-xl border bg-white text-gray-900 shadow-md ${className}`}>
     {children}
@@ -71,9 +71,6 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', ..
 
 /**
  * Fetches user data from the GitHub API using a provided username.
- * This function is included directly in the file to resolve the import issue.
- * @param {string} user The GitHub username to search for.
- * @returns {Promise<object>} A promise that resolves with the user data.
  */
 const fetchUserData = async (user) => {
   try {
@@ -81,65 +78,34 @@ const fetchUserData = async (user) => {
     return response.data;
   } catch (err) {
     if (err.response && err.response.status === 404) {
-      throw new Error("User not found");
+      throw new Error("Looks like we can't find the user.");
     }
     throw err;
   }
 };
 
-/**
- * A reusable search form component for searching GitHub users.
- * This component is included directly in the file to resolve the import issue.
- * @param {object} props
- * @param {boolean} props.loading - Indicates if a search is in progress.
- * @param {function} props.onSearch - The function to call when the form is submitted.
- */
-const Search = ({ loading, onSearch }) => {
-  const [username, setUsername] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (username.trim()) {
-      onSearch(username);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 mb-8">
-      <Input
-        type="text"
-        placeholder="Enter GitHub username..."
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        className="flex-1"
-      />
-      <Button type="submit" disabled={loading}>
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SearchIcon className="h-4 w-4" />}
-        <span className="ml-2 hidden md:inline">Search</span>
-      </Button>
-    </form>
-  );
-};
-
-
 const App = () => {
+  const [username, setUsername] = useState('');
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleSearch = async (username) => {
-    setLoading(true);
-    setError(null);
-    setUserData(null);
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (username.trim()) {
+      setLoading(true);
+      setError(null);
+      setUserData(null);
 
-    try {
-      const data = await fetchUserData(username);
-      setUserData(data);
-    } catch (err) {
-      setError("Looks like we can't find the user.");
-      console.error("API error:", err);
-    } finally {
-      setLoading(false);
+      try {
+        const data = await fetchUserData(username);
+        setUserData(data);
+      } catch (err) {
+        setError(err.message);
+        console.error("API error:", err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -149,7 +115,19 @@ const App = () => {
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 text-gray-900">
           GitHub User Search
         </h1>
-        <Search loading={loading} onSearch={handleSearch} />
+        <form onSubmit={handleSearch} className="flex items-center gap-2 mb-8">
+          <Input
+            type="text"
+            placeholder="Enter GitHub username..."
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SearchIcon className="h-4 w-4" />}
+            <span className="ml-2 hidden md:inline">Search</span>
+          </Button>
+        </form>
 
         {loading && (
           <div className="text-center text-lg mt-8 flex items-center justify-center text-gray-700">

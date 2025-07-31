@@ -1,7 +1,53 @@
 import { useState } from 'react';
-import { SearchIcon, Loader2 } from 'lucide-react';
+import axios from 'axios';
+import { SearchIcon, Loader2, UserRound, Users, GitPullRequest, MapPin, Link as LinkIcon, Building } from 'lucide-react';
 
-// Reusable UI components moved here to resolve the import error.
+// Reusable UI components
+const Card = ({ children, className = '' }) => (
+  <div className={`rounded-xl border bg-white text-gray-900 shadow-md ${className}`}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className = '' }) => (
+  <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardTitle = ({ children, className = '' }) => (
+  <h3 className={`font-semibold tracking-tight text-2xl ${className}`}>
+    {children}
+  </h3>
+);
+
+const CardDescription = ({ children, className = '' }) => (
+  <p className={`text-sm text-gray-500 ${className}`}>
+    {children}
+  </p>
+);
+
+const CardContent = ({ children, className = '' }) => (
+  <div className={`p-6 pt-0 ${className}`}>
+    {children}
+  </div>
+);
+
+const Avatar = ({ src, alt, fallback, className = '' }) => (
+  <div className={`relative flex h-24 w-24 shrink-0 overflow-hidden rounded-full ${className}`}>
+    <img src={src} alt={alt} className="aspect-square h-full w-full" onError={(e) => { e.target.style.display = 'none'; }} />
+    <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
+      {fallback}
+    </div>
+  </div>
+);
+
+const AvatarFallback = ({ children }) => (
+  <span className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
+    {children}
+  </span>
+);
+
 const Button = ({ children, onClick, className = '', ...props }) => (
   <button
     onClick={onClick}
@@ -23,38 +69,151 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', ..
   />
 );
 
-/**
- * A reusable search form component for searching GitHub users.
- * @param {object} props
- * @param {boolean} props.loading - Indicates if a search is in progress.
- * @param {function} props.onSearch - The function to call when the form is submitted.
- */
-const Search = ({ loading, onSearch }) => {
-  const [username, setUsername] = useState('');
+// The API integration logic is now a function within this file
+const fetchUserData = async (user) => {
+  try {
+    const response = await axios.get(`https://api.github.com/users/${user}`);
+    return response.data;
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
+      throw new Error("User not found");
+    }
+    throw err;
+  }
+};
 
-  const handleSubmit = (e) => {
+const Search = () => {
+  const [username, setUsername] = useState('');
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSearch = async (e) => {
     e.preventDefault();
-    // Only call the search function if the input is not empty
     if (username.trim()) {
-      onSearch(username);
+      setLoading(true);
+      setError(null);
+      setUserData(null);
+
+      try {
+        const data = await fetchUserData(username);
+        setUserData(data);
+      } catch (err) {
+        setError("Looks like we can't find the user.");
+        console.error("API error:", err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 mb-8">
-      <Input
-        type="text"
-        placeholder="Enter GitHub username..."
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        className="flex-1"
-      />
-      <Button type="submit" disabled={loading}>
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SearchIcon className="h-4 w-4" />}
-        <span className="ml-2 hidden md:inline">Search</span>
-      </Button>
-    </form>
+    <div className="w-full max-w-lg">
+      <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 text-gray-900">
+        GitHub User Search
+      </h1>
+      <form onSubmit={handleSearch} className="flex items-center gap-2 mb-8">
+        <Input
+          type="text"
+          placeholder="Enter GitHub username..."
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="flex-1"
+        />
+        <Button type="submit" disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SearchIcon className="h-4 w-4" />}
+          <span className="ml-2 hidden md:inline">Search</span>
+        </Button>
+      </form>
+
+      {loading && (
+        <div className="text-center text-lg mt-8 flex items-center justify-center text-gray-700">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Loading...</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 text-red-700 p-4 rounded-lg mt-8 text-center">
+          {error}
+        </div>
+      )}
+
+      {userData && (
+        <Card className="w-full mt-8 animate-fade-in-up">
+          <CardHeader className="flex-row items-center justify-between pb-2">
+            <div className="flex items-center gap-4">
+              <Avatar src={userData.avatar_url} alt={`${userData.login}'s avatar`}>
+                <AvatarFallback><UserRound size={32} /></AvatarFallback>
+              </Avatar>
+              <div>
+                <CardTitle>{userData.name || userData.login}</CardTitle>
+                <CardDescription>@{userData.login}</CardDescription>
+              </div>
+            </div>
+            <a
+              href={userData.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 transition-colors"
+              aria-label={`View ${userData.login}'s GitHub profile`}
+            >
+              <LinkIcon className="h-6 w-6" />
+            </a>
+          </CardHeader>
+          <CardContent>
+            {userData.bio && (
+              <p className="text-base mb-4">{userData.bio}</p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
+              <div className="flex items-center gap-2">
+                <UserRound className="h-4 w-4" />
+                <span>{userData.followers} Followers</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>{userData.following} Following</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <GitPullRequest className="h-4 w-4" />
+                <span>{userData.public_repos} Public Repos</span>
+              </div>
+              {userData.company && (
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  <span>{userData.company}</span>
+                </div>
+              )}
+              {userData.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{userData.location}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 
 export default Search;
+
+const style = document.createElement('style');
+style.innerHTML = `
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+`;
+document.head.appendChild(style);
