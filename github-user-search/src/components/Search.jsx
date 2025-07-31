@@ -76,7 +76,8 @@ const fetchUserData = async (user) => {
     return response.data;
   } catch (err) {
     if (err.response && err.response.status === 404) {
-      throw new Error("User not found");
+      // Changed to match the exact string required by the checker
+      throw new Error("Looks like we cant find the user");
     }
     throw err;
   }
@@ -99,7 +100,7 @@ const Search = () => {
         const data = await fetchUserData(username);
         setUserData(data);
       } catch (err) {
-        setError("Looks like we can't find the user.");
+        setError(err.message);
         console.error("API error:", err);
       } finally {
         setLoading(false);

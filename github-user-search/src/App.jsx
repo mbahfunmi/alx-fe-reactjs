@@ -69,16 +69,13 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', ..
   />
 );
 
-/**
- * Fetches user data from the GitHub API using a provided username.
- */
 const fetchUserData = async (user) => {
   try {
     const response = await axios.get(`https://api.github.com/users/${user}`);
     return response.data;
   } catch (err) {
     if (err.response && err.response.status === 404) {
-      throw new Error("Looks like we can't find the user.");
+      throw new Error("Looks like we cant find the user");
     }
     throw err;
   }
