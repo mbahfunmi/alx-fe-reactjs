@@ -1,13 +1,159 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub User Search</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN for SVG icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 p-8 flex flex-col items-center justify-center">
+    <div class="w-full max-w-lg">
+        <h1 class="text-4xl md:text-5xl font-bold text-center mb-8 text-gray-900">
+            GitHub User Search
+        </h1>
+        <form id="search-form" class="flex items-center gap-2 mb-8">
+            <input id="username-input" type="text" placeholder="Enter GitHub username..."
+                   class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 flex-1">
+            <button type="submit" id="search-button"
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2">
+                <i data-lucide="search" class="h-4 w-4"></i>
+                <span class="ml-2 hidden md:inline">Search</span>
+            </button>
+        </form>
+
+        <div id="results-container">
+            <!-- Content will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const searchForm = document.getElementById('search-form');
+        const usernameInput = document.getElementById('username-input');
+        const searchButton = document.getElementById('search-button');
+        const resultsContainer = document.getElementById('results-container');
+
+        // This function will fetch the user data from the GitHub API
+        const fetchUserData = async (username) => {
+            const url = `https://api.github.com/users/${username}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                // If the response is not OK (e.g., 404), throw an error
+                throw new Error('User not found');
+            }
+            return await response.json();
+        };
+
+        // This function will render the user's data on the page
+        const renderUserData = (userData) => {
+            const cardHtml = `
+                <div class="rounded-xl border bg-white text-gray-900 shadow-md w-full mt-8 animate-fade-in-up">
+                    <div class="flex items-center justify-between p-6 pb-2">
+                        <div class="flex items-center gap-4">
+                            <div class="relative flex h-24 w-24 shrink-0 overflow-hidden rounded-full">
+                                <img src="${userData.avatar_url}" alt="${userData.login}'s avatar" class="aspect-square h-full w-full">
+                            </div>
+                            <div>
+                                <h3 class="font-semibold tracking-tight text-2xl">${userData.name || userData.login}</h3>
+                                <p class="text-sm text-gray-500">@${userData.login}</p>
+                            </div>
+                        </div>
+                        <a href="${userData.html_url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 transition-colors">
+                            <i data-lucide="link" class="h-6 w-6"></i>
+                        </a>
+                    </div>
+                    <div class="p-6 pt-0">
+                        ${userData.bio ? `<p class="text-base mb-4">${userData.bio}</p>` : ''}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-round" class="h-4 w-4"></i>
+                                <span>${userData.followers} Followers</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="users" class="h-4 w-4"></i>
+                                <span>${userData.following} Following</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="git-pull-request" class="h-4 w-4"></i>
+                                <span>${userData.public_repos} Public Repos</span>
+                            </div>
+                            ${userData.company ? `
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="building" class="h-4 w-4"></i>
+                                <span>${userData.company}</span>
+                            </div>` : ''}
+                            ${userData.location ? `
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="map-pin" class="h-4 w-4"></i>
+                                <span>${userData.location}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            resultsContainer.innerHTML = cardHtml;
+            // This is a necessary step to re-render the Lucide icons after they are added to the DOM
+            lucide.createIcons();
+        };
+
+        // This function will display a loading message
+        const renderLoading = () => {
+            resultsContainer.innerHTML = `
+                <div class="text-center text-lg mt-8 flex items-center justify-center text-gray-700">
+                    <i data-lucide="loader-2" class="h-6 w-6 animate-spin mr-2"></i>
+                    <span>Loading...</span>
+                </div>
+            `;
+            lucide.createIcons();
+        };
+
+        // This function will display an error message
+        const renderError = (message) => {
+            resultsContainer.innerHTML = `
+                <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-8 text-center">
+                    ${message}
+                </div>
+            `;
+        };
+
+        // Add an event listener to the form to handle submission
+        searchForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent the page from reloading
+            const username = usernameInput.value.trim();
+
+            if (username) {
+                renderLoading();
+                try {
+                    const userData = await fetchUserData(username);
+                    renderUserData(userData);
+                } catch (error) {
+                    renderError("Looks like we can't find the user.");
+                    console.error("API Error:", error);
+                }
+            }
+        });
+    </script>
+</body>
 </html>
