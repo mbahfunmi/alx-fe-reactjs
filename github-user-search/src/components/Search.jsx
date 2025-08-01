@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { SearchIcon, Loader2, UserRound, Users, GitPullRequest, MapPin, Link as LinkIcon, Building } from 'lucide-react';
+import { SearchIcon, Loader2, UserRound, MapPin, GitPullRequest } from 'lucide-react';
+import { fetchUsers } from '../services/githubService';
 import React from 'react';
 
 // Reusable UI components for a consistent look
@@ -10,24 +10,6 @@ const Card = ({ children, className = '' }) => (
   </div>
 );
 
-const CardHeader = ({ children, className = '' }) => (
-  <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>
-    {children}
-  </div>
-);
-
-const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`font-semibold tracking-tight text-2xl ${className}`}>
-    {children}
-  </h3>
-);
-
-const CardDescription = ({ children, className = '' }) => (
-  <p className={`text-sm text-gray-500 ${className}`}>
-    {children}
-  </p>
-);
-
 const CardContent = ({ children, className = '' }) => (
   <div className={`p-6 pt-0 ${className}`}>
     {children}
@@ -35,18 +17,12 @@ const CardContent = ({ children, className = '' }) => (
 );
 
 const Avatar = ({ src, alt, fallback, className = '' }) => (
-  <div className={`relative flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-full ${className}`}>
+  <div className={`relative flex h-20 w-20 shrink-0 overflow-hidden rounded-full ${className}`}>
     <img src={src} alt={alt} className="aspect-square h-full w-full" onError={(e) => { e.target.style.display = 'none'; }} />
     <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
       {fallback}
     </div>
   </div>
-);
-
-const AvatarFallback = ({ children }) => (
-  <span className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
-    {children}
-  </span>
 );
 
 const Button = ({ children, onClick, className = '', ...props }) => (
@@ -70,24 +46,6 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', ..
   />
 );
 
-/**
- * Builds the query string for the GitHub Search API based on search parameters.
- * @param {string} username - The username to search for.
- * @param {string} location - The location to filter by.
- * @param {number} minRepos - The minimum number of public repositories.
- * @returns {string} The formatted query string.
- */
-const buildSearchQuery = (username, location, minRepos) => {
-  let query = username.trim();
-  if (location.trim()) {
-    query += `+location:${location.trim()}`;
-  }
-  if (minRepos > 0) {
-    query += `+repos:>=${minRepos}`;
-  }
-  return query;
-};
-
 const Search = () => {
   const [username, setUsername] = useState('');
   const [location, setLocation] = useState('');
@@ -99,55 +57,41 @@ const Search = () => {
   const [hasMore, setHasMore] = useState(false);
   const perPage = 10;
 
-  /**
-   * Fetches user data from the GitHub Search API.
-   * Handles both initial search and pagination for "Load More".
-   * @param {number} pageNumber - The page number to fetch.
-   * @param {boolean} isInitialSearch - Flag to indicate if this is a new search.
-   */
-  const fetchUsers = async (pageNumber, isInitialSearch = false) => {
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (username.trim() || location.trim() || minRepos > 0) {
+      setLoading(true);
+      setError(null);
+      setPage(1);
+
+      try {
+        const { users, hasMore } = await fetchUsers(username, location, minRepos, 1, perPage);
+        setSearchResults(users);
+        setHasMore(hasMore);
+      } catch (err) {
+        setError(err.message);
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleLoadMore = async () => {
+    const nextPage = page + 1;
     setLoading(true);
     setError(null);
 
-    const query = buildSearchQuery(username, location, minRepos);
-
-    if (!query) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await axios.get('https://api.github.com/search/users', {
-        params: {
-          q: query,
-          per_page: perPage,
-          page: pageNumber,
-        },
-      });
-
-      const newUsers = response.data.items;
-      setSearchResults(prevResults => isInitialSearch ? newUsers : [...prevResults, ...newUsers]);
-      setHasMore(newUsers.length === perPage);
+      const { users, hasMore } = await fetchUsers(username, location, minRepos, nextPage, perPage);
+      setSearchResults(prevResults => [...prevResults, ...users]);
+      setHasMore(hasMore);
+      setPage(nextPage);
     } catch (err) {
-      setError("Looks like we can't find any users with those criteria.");
-      console.error("API error:", err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (username.trim() || location.trim() || minRepos > 0) {
-      setPage(1); // Reset page for a new search
-      fetchUsers(1, true); // Perform an initial search
-    }
-  };
-
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchUsers(nextPage);
   };
 
   return (
@@ -201,11 +145,25 @@ const Search = () => {
                 <Avatar src={user.avatar_url} alt={`${user.login}'s avatar`} fallback={<UserRound size={32} />} />
                 <div className="flex-1 text-center sm:text-left">
                   <h4 className="font-bold text-xl">{user.login}</h4>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {user.location && (
+                      <div className="flex items-center justify-center sm:justify-start gap-1">
+                        <MapPin size={16} />
+                        <span>{user.location}</span>
+                      </div>
+                    )}
+                    {typeof user.public_repos === 'number' && (
+                      <div className="flex items-center justify-center sm:justify-start gap-1 mt-1">
+                        <GitPullRequest size={16} />
+                        <span>{user.public_repos} Repositories</span>
+                      </div>
+                    )}
+                  </div>
                   <a
                     href={user.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline transition-colors"
+                    className="text-blue-600 hover:underline transition-colors block mt-2"
                   >
                     View Profile
                   </a>
@@ -228,21 +186,3 @@ const Search = () => {
 };
 
 export default Search;
-
-const style = document.createElement('style');
-style.innerHTML = `
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .animate-fade-in-up {
-    animation: fade-in-up 0.5s ease-out forwards;
-  }
-`;
-document.head.appendChild(style);
