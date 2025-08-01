@@ -44,7 +44,7 @@ const Avatar = ({ src, alt, fallback, className = '' }) => (
 );
 
 const AvatarFallback = ({ children }) => (
-  <span className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
+  <span className="flex h-full w-full items-center justify-full rounded-full bg-gray-200">
     {children}
   </span>
 );
@@ -240,21 +240,3 @@ const App = () => {
 };
 
 export default App;
-
-const style = document.createElement('style');
-style.innerHTML = `
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .animate-fade-in-up {
-    animation: fade-in-up 0.5s ease-out forwards;
-  }
-`;
-document.head.appendChild(style);

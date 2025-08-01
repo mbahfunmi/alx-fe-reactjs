@@ -209,10 +209,6 @@ const Search = () => {
                   >
                     View Profile
                   </a>
-                  {/* You would need to make another API call for location and repos for each user, 
-                      as the search API doesn't return them directly. This is a trade-off for 
-                      getting a list of users. For this task, we will just show what's available
-                      directly from the search results, which is a link to the profile. */}
                 </div>
               </CardContent>
             </Card>
@@ -232,3 +228,21 @@ const Search = () => {
 };
 
 export default Search;
+
+const style = document.createElement('style');
+style.innerHTML = `
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+`;
+document.head.appendChild(style);
