@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { SearchIcon, Loader2, UserRound, Users, GitPullRequest, MapPin, Link as LinkIcon, Building } from 'lucide-react';
+import React from 'react';
 
-// Reusable UI components
+// Reusable UI components for a consistent look
 const Card = ({ children, className = '' }) => (
   <div className={`rounded-xl border bg-white text-gray-900 shadow-md ${className}`}>
     {children}
@@ -34,7 +35,7 @@ const CardContent = ({ children, className = '' }) => (
 );
 
 const Avatar = ({ src, alt, fallback, className = '' }) => (
-  <div className={`relative flex h-24 w-24 shrink-0 overflow-hidden rounded-full ${className}`}>
+  <div className={`relative flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-full ${className}`}>
     <img src={src} alt={alt} className="aspect-square h-full w-full" onError={(e) => { e.target.style.display = 'none'; }} />
     <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
       {fallback}
@@ -69,132 +70,171 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', ..
   />
 );
 
-const fetchUserData = async (user) => {
-  try {
-    const response = await axios.get(`https://api.github.com/users/${user}`);
-    return response.data;
-  } catch (err) {
-    if (err.response && err.response.status === 404) {
-      throw new Error("Looks like we cant find the user");
-    }
-    throw err;
+/**
+ * Builds the query string for the GitHub Search API based on search parameters.
+ * @param {string} username - The username to search for.
+ * @param {string} location - The location to filter by.
+ * @param {number} minRepos - The minimum number of public repositories.
+ * @returns {string} The formatted query string.
+ */
+const buildSearchQuery = (username, location, minRepos) => {
+  let query = username.trim();
+  if (location.trim()) {
+    query += `+location:${location.trim()}`;
   }
+  if (minRepos > 0) {
+    query += `+repos:>=${minRepos}`;
+  }
+  return query;
 };
 
 const App = () => {
   const [username, setUsername] = useState('');
-  const [userData, setUserData] = useState(null);
+  const [location, setLocation] = useState('');
+  const [minRepos, setMinRepos] = useState(0);
+  const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const perPage = 10;
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (username.trim()) {
-      setLoading(true);
-      setError(null);
-      setUserData(null);
+  /**
+   * Fetches user data from the GitHub Search API.
+   * Handles both initial search and pagination for "Load More".
+   * @param {number} pageNumber - The page number to fetch.
+   * @param {boolean} isInitialSearch - Flag to indicate if this is a new search.
+   */
+  const fetchUsers = async (pageNumber, isInitialSearch = false) => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const data = await fetchUserData(username);
-        setUserData(data);
-      } catch (err) {
-        setError(err.message);
-        console.error("API error:", err);
-      } finally {
-        setLoading(false);
-      }
+    const query = buildSearchQuery(username, location, minRepos);
+
+    if (!query) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get('https://api.github.com/search/users', {
+        params: {
+          q: query,
+          per_page: perPage,
+          page: pageNumber,
+        },
+      });
+
+      const newUsers = response.data.items;
+      setSearchResults(prevResults => isInitialSearch ? newUsers : [...prevResults, ...newUsers]);
+      setHasMore(newUsers.length === perPage);
+    } catch (err) {
+      setError("Looks like we can't find any users with those criteria.");
+      console.error("API error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (username.trim() || location.trim() || minRepos > 0) {
+      setPage(1); // Reset page for a new search
+      fetchUsers(1, true); // Perform an initial search
+    }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchUsers(nextPage);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8 flex flex-col items-center justify-center font-sans">
-      <div className="w-full max-w-lg">
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 text-gray-900">
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex flex-col items-center justify-start font-sans">
+      <header className="w-full max-w-4xl text-center mb-8">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
           GitHub User Search
         </h1>
-        <form onSubmit={handleSearch} className="flex items-center gap-2 mb-8">
-          <Input
-            type="text"
-            placeholder="Enter GitHub username..."
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="flex-1"
-          />
-          <Button type="submit" disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SearchIcon className="h-4 w-4" />}
-            <span className="ml-2 hidden md:inline">Search</span>
-          </Button>
-        </form>
+        <p className="text-md text-gray-600 mt-2">
+          Find users by username, location, and repository count.
+        </p>
+      </header>
+      <main className="w-full max-w-4xl">
+        <div>
+          <form onSubmit={handleSearch} className="bg-white p-6 rounded-xl shadow-md mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+              <Input
+                type="text"
+                placeholder="Username (e.g., torvalds)"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <Input
+                type="text"
+                placeholder="Location (e.g., Nigeria)"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Min Repositories"
+                value={minRepos}
+                onChange={(e) => setMinRepos(e.target.value)}
+                min="0"
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SearchIcon className="h-4 w-4" />}
+              <span className="ml-2">Search Users</span>
+            </Button>
+          </form>
 
-        {loading && (
-          <div className="text-center text-lg mt-8 flex items-center justify-center text-gray-700">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Loading...</span>
-          </div>
-        )}
+          {loading && searchResults.length === 0 && (
+            <div className="text-center text-lg mt-8 flex items-center justify-center text-gray-700">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading...</span>
+            </div>
+          )}
 
-        {error && (
-          <div className="bg-red-100 text-red-700 p-4 rounded-lg mt-8 text-center">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="bg-red-100 text-red-700 p-4 rounded-lg mt-8 text-center">
+              {error}
+            </div>
+          )}
 
-        {userData && (
-          <Card className="w-full mt-8 animate-fade-in-up">
-            <CardHeader className="flex-row items-center justify-between pb-2">
-              <div className="flex items-center gap-4">
-                <Avatar src={userData.avatar_url} alt={`${userData.login}'s avatar`}>
-                  <AvatarFallback><UserRound size={32} /></AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle>{userData.name || userData.login}</CardTitle>
-                  <CardDescription>@{userData.login}</CardDescription>
+          {searchResults.length > 0 && (
+            <div className="space-y-6 mt-8">
+              {searchResults.map((user) => (
+                <Card key={user.id}>
+                  <CardContent className="flex flex-col sm:flex-row items-center gap-4">
+                    <Avatar src={user.avatar_url} alt={`${user.login}'s avatar`} fallback={<UserRound size={32} />} />
+                    <div className="flex-1 text-center sm:text-left">
+                      <h4 className="font-bold text-xl">{user.login}</h4>
+                      <a
+                        href={user.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline transition-colors"
+                      >
+                        View Profile
+                      </a>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {hasMore && (
+                <div className="text-center mt-6">
+                  <Button onClick={handleLoadMore} disabled={loading}>
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    <span className="ml-2">Load More</span>
+                  </Button>
                 </div>
-              </div>
-              <a
-                href={userData.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 transition-colors"
-                aria-label={`View ${userData.login}'s GitHub profile`}
-              >
-                <LinkIcon className="h-6 w-6" />
-              </a>
-            </CardHeader>
-            <CardContent>
-              {userData.bio && (
-                <p className="text-base mb-4">{userData.bio}</p>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
-                <div className="flex items-center gap-2">
-                  <UserRound className="h-4 w-4" />
-                  <span>{userData.followers} Followers</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>{userData.following} Following</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <GitPullRequest className="h-4 w-4" />
-                  <span>{userData.public_repos} Public Repos</span>
-                </div>
-                {userData.company && (
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    <span>{userData.company}</span>
-                  </div>
-                )}
-                {userData.location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>{userData.location}</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 };
