@@ -48,7 +48,7 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', ..
 
 /**
  * Fetches GitHub user data using either the basic user endpoint or the advanced search endpoint.
- * This function is defined within the main application file for a self-contained solution.
+ * This function is now defined directly inside the App.jsx file.
  *
  * @param {string} username The username to search for.
  * @param {string} location Optional location filter.
