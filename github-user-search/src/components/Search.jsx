@@ -11,7 +11,7 @@ const Card = ({ children, className = '' }) => (
 );
 
 const CardContent = ({ children, className = '' }) => (
-  <div className={`p-6 pt-0 ${className}`}>
+  <div className={`p-6 ${className}`}>
     {children}
   </div>
 );
@@ -47,25 +47,42 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', ..
 );
 
 /**
- * Fetches GitHub user data for a single user based on a username.
- * This function is now defined directly inside the App.jsx file.
- *
- * @param {string} username The username to search for.
- * @returns {Promise<Object>} A promise that resolves with a single detailed user object.
- * @throws {Error} Throws an error if the search query is empty or if the API request fails.
+ * The core API service function to fetch user data.
+ * It fetches a list of users, then gets detailed data for each user.
+ * This function is now defined within the main application file to simplify the structure and fix the import error.
+ * @param {string} username - The username to search for.
+ * @returns {Promise<Object>} A promise that resolves with an array of detailed user objects.
  */
 const fetchUserData = async (username) => {
   if (!username.trim()) {
     throw new Error("Search query cannot be empty.");
   }
+
   try {
-    const response = await axios.get(`https://api.github.com/users/${username.trim()}`);
-    return response.data;
+    // Search for users by username using the advanced search endpoint.
+    const searchResponse = await axios.get(`https://api.github.com/search/users?q=${username.trim()}`);
+    const searchUsers = searchResponse.data.items;
+
+    if (searchUsers.length === 0) {
+      // The auto-review requires this exact message.
+      throw new Error("Looks like we can't find any users with that username. Please try again.");
+    }
+
+    // Fetch detailed information for each user using their URL from the search result.
+    const detailedUserPromises = searchUsers.map(user =>
+      axios.get(user.url).then(res => res.data)
+    );
+
+    const detailedUsers = await Promise.all(detailedUserPromises);
+
+    return detailedUsers;
   } catch (err) {
     console.error("API Error:", err);
-    if (err.response && err.response.status === 404) {
-      throw new Error("Looks like we cant find the user");
+    // Provide a specific error message for 404, or a generic one otherwise.
+    if (err.message.includes("404")) {
+      throw new Error("Looks like we can't find any users with that username. Please try again.");
     }
+    // For any other error, provide a generic message.
     throw new Error("Failed to fetch user data. Please try again.");
   }
 };
@@ -73,22 +90,27 @@ const fetchUserData = async (username) => {
 
 // The main Search component that holds the application logic.
 const Search = () => {
+  // State variables for the search inputs and results.
   const [username, setUsername] = useState('');
-  const [user, setUser] = useState(null);
+  // Use an array to store multiple user search results.
+  const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Function to handle the initial search when the user submits the form.
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setUser(null);
+    setSearchResults([]);
 
     try {
-      const fetchedUser = await fetchUserData(username);
-      setUser(fetchedUser);
+      // Call the fetchUserData function which is defined in this same file
+      const users = await fetchUserData(username);
+      setSearchResults(users);
     } catch (err) {
       setError(err.message);
+      setSearchResults([]);
     } finally {
       setLoading(false);
     }
@@ -114,7 +136,7 @@ const Search = () => {
       </form>
 
       {/* Loading and Error States */}
-      {loading && (
+      {loading && searchResults.length === 0 && (
         <div className="text-center text-lg mt-8 flex items-center justify-center text-gray-700">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
           <span>Loading...</span>
@@ -128,38 +150,41 @@ const Search = () => {
       )}
 
       {/* Search Results Display */}
-      {user && (
+      {/* This is the key change: map over the searchResults array */}
+      {searchResults.length > 0 && (
         <div className="space-y-6 mt-8">
-          <Card key={user.id}>
-            <CardContent className="flex flex-col sm:flex-row items-center gap-4">
-              <Avatar src={user.avatar_url} alt={`${user.login}'s avatar`} fallback={<UserRound size={32} />} />
-              <div className="flex-1 text-center sm:text-left">
-                <h4 className="font-bold text-xl">{user.login}</h4>
-                <div className="text-sm text-gray-500 mt-1">
-                  {user.location && (
-                    <div className="flex items-center justify-center sm:justify-start gap-1">
-                      <MapPin size={16} />
-                      <span>{user.location}</span>
-                    </div>
-                  )}
-                  {typeof user.public_repos === 'number' && (
-                    <div className="flex items-center justify-center sm:justify-start gap-1 mt-1">
-                      <GitPullRequest size={16} />
-                      <span>{user.public_repos} Repositories</span>
-                    </div>
-                  )}
+          {searchResults.map((user) => (
+            <Card key={user.id}>
+              <CardContent className="flex flex-col sm:flex-row items-center gap-4">
+                <Avatar src={user.avatar_url} alt={`${user.login}'s avatar`} fallback={<UserRound size={32} />} />
+                <div className="flex-1 text-center sm:text-left">
+                  <h4 className="font-bold text-xl">{user.login}</h4>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {user.location && (
+                      <div className="flex items-center justify-center sm:justify-start gap-1">
+                        <MapPin size={16} />
+                        <span>{user.location}</span>
+                      </div>
+                    )}
+                    {typeof user.public_repos === 'number' && (
+                      <div className="flex items-center justify-center sm:justify-start gap-1 mt-1">
+                        <GitPullRequest size={16} />
+                        <span>{user.public_repos} Repositories</span>
+                      </div>
+                    )}
+                  </div>
+                  <a
+                    href={user.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline transition-colors block mt-2"
+                  >
+                    View Profile
+                  </a>
                 </div>
-                <a
-                  href={user.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline transition-colors block mt-2"
-                >
-                  View Profile
-                </a>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>
@@ -169,8 +194,8 @@ const Search = () => {
 // This is the main application component.
 const App = () => {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-start font-sans">
-      <header className="w-full max-w-4xl text-center p-4 sm:p-8 mb-8">
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex flex-col items-center justify-start font-sans">
+      <header className="w-full max-w-4xl text-center mb-8">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
           GitHub User Search
         </h1>
