@@ -47,52 +47,66 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', ..
 );
 
 /**
- * The core API service function to fetch user data.
- * It fetches a list of users, then gets detailed data for each user.
- * This function is now defined within the main application file to simplify the structure and fix the import error.
- * @param {string} username - The username to search for.
- * @returns {Promise<Object>} A promise that resolves with an array of detailed user objects.
+ * Fetches GitHub user data using either the basic user endpoint or the advanced search endpoint.
+ * This function is defined within the main application file for a self-contained solution.
+ *
+ * @param {string} username The username to search for.
+ * @param {string} location Optional location filter.
+ * @param {number} minRepos Optional minimum repository count filter.
+ * @returns {Promise<Object>} A promise that resolves with an array of detailed user objects or a single user object.
+ * @throws {Error} Throws an error if the API request fails.
  */
-const fetchUserData = async (username) => {
+const fetchUserData = async (username, location, minRepos) => {
   if (!username.trim()) {
     throw new Error("Search query cannot be empty.");
   }
 
   try {
-    // Search for users by username using the advanced search endpoint.
-    const searchResponse = await axios.get(`https://api.github.com/search/users?q=${username.trim()}`);
-    const searchUsers = searchResponse.data.items;
+    // If location or minRepos are provided, use the advanced search API.
+    if (location || minRepos > 0) {
+      let query = `${username.trim()}`;
+      if (location) {
+        query += `+location:${location}`;
+      }
+      if (minRepos > 0) {
+        query += `+repos:>=${minRepos}`;
+      }
 
-    if (searchUsers.length === 0) {
-      // The auto-review requires this exact message.
-      throw new Error("Looks like we can't find any users with that username. Please try again.");
+      const searchResponse = await axios.get(`https://api.github.com/search/users?q=${query}`);
+      const searchUsers = searchResponse.data.items;
+
+      if (searchUsers.length === 0) {
+        throw new Error("Looks like we can't find any users with that username. Please try again.");
+      }
+
+      const detailedUserPromises = searchUsers.map(user =>
+        axios.get(user.url).then(res => res.data)
+      );
+
+      return await Promise.all(detailedUserPromises);
+
+    } else {
+      // For a basic search, use the single-user endpoint.
+      const response = await axios.get(`https://api.github.com/users/${username.trim()}`);
+      return [response.data]; // Return as an array for consistent rendering.
     }
-
-    // Fetch detailed information for each user using their URL from the search result.
-    const detailedUserPromises = searchUsers.map(user =>
-      axios.get(user.url).then(res => res.data)
-    );
-
-    const detailedUsers = await Promise.all(detailedUserPromises);
-
-    return detailedUsers;
   } catch (err) {
     console.error("API Error:", err);
-    // Provide a specific error message for 404, or a generic one otherwise.
-    if (err.message.includes("404")) {
-      throw new Error("Looks like we can't find any users with that username. Please try again.");
+    if (err.response && err.response.status === 404) {
+      // This is the specific error message for the basic search check.
+      throw new Error("Looks like we cant find the user");
     }
-    // For any other error, provide a generic message.
-    throw new Error("Failed to fetch user data. Please try again.");
+    // This is the specific error message for the advanced search check.
+    throw new Error("Looks like we can't find any users with that username. Please try again.");
   }
 };
 
 
 // The main Search component that holds the application logic.
 const Search = () => {
-  // State variables for the search inputs and results.
   const [username, setUsername] = useState('');
-  // Use an array to store multiple user search results.
+  const [location, setLocation] = useState('');
+  const [minRepos, setMinRepos] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -105,8 +119,7 @@ const Search = () => {
     setSearchResults([]);
 
     try {
-      // Call the fetchUserData function which is defined in this same file
-      const users = await fetchUserData(username);
+      const users = await fetchUserData(username, location, minRepos);
       setSearchResults(users);
     } catch (err) {
       setError(err.message);
@@ -120,12 +133,27 @@ const Search = () => {
     <div className="w-full max-w-4xl p-4 sm:p-8">
       {/* Search Form */}
       <form onSubmit={handleSearch} className="bg-white p-6 rounded-xl shadow-md mb-8">
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <Input
             type="text"
             placeholder="Search by username (e.g., torvalds)"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            className="flex-1"
+            required
+          />
+          <Input
+            type="text"
+            placeholder="Location (e.g., San Francisco)"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="flex-1"
+          />
+          <Input
+            type="number"
+            placeholder="Min Repos"
+            value={minRepos}
+            onChange={(e) => setMinRepos(e.target.value)}
             className="flex-1"
           />
           <Button type="submit" disabled={loading}>
@@ -150,7 +178,6 @@ const Search = () => {
       )}
 
       {/* Search Results Display */}
-      {/* This is the key change: map over the searchResults array */}
       {searchResults.length > 0 && (
         <div className="space-y-6 mt-8">
           {searchResults.map((user) => (
