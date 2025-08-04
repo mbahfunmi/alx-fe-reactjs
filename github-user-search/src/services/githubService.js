@@ -1,59 +1,37 @@
 import axios from 'axios';
 
 /**
- * Builds the query string for the GitHub Search API based on search parameters.
- * @param {string} username - The username to search for.
- * @param {string} location - The location to filter by.
- * @param {number} minRepos - The minimum number of public repositories.
- * @returns {string} The formatted query string.
+ * Fetches GitHub user data based on a username search query.
+ * It first searches for users, then gets detailed profile information for each.
+ * @param {string} username The username to search for.
+ * @returns {Promise<Array<Object>>} A promise that resolves with an array of detailed user objects.
+ * @throws {Error} Throws an error if the search query is empty or if the API request fails.
  */
-const buildSearchQuery = (username, location, minRepos) => {
-  let query = username.trim();
-  if (location.trim()) {
-    query += `+location:${location.trim()}`;
-  }
-  if (minRepos > 0) {
-    query += `+repos:>=${minRepos}`;
-  }
-  return query;
-};
-
-/**
- * Fetches user data from the GitHub Search API.
- * This function first gets a list of users, then it fetches detailed information for each user.
- * @param {string} username - The username to search for.
- * @param {string} location - The location to filter by.
- * @param {number} minRepos - The minimum number of public repositories.
- * @param {number} pageNumber - The page number to fetch.
- * @param {number} perPage - The number of users per page.
- * @returns {Promise<Object>} A promise that resolves with an object containing the user results and a boolean indicating if there are more pages.
- */
-export const fetchUsers = async (username, location, minRepos, pageNumber, perPage) => {
-  const query = buildSearchQuery(username, location, minRepos);
-  if (!query) {
+export const fetchUserData = async (username) => {
+  // Ensure the search query is not empty before making the API call
+  if (!username.trim()) {
     throw new Error("Search query cannot be empty.");
   }
 
   try {
-    const searchResponse = await axios.get(`https://api.github.com/search/users?q=${query}`, {
-      params: {
-        per_page: perPage,
-        page: pageNumber,
-      },
-    });
-
+    // 1. Search for users by the provided username using the GitHub Search API
+    const searchResponse = await axios.get(`https://api.github.com/search/users?q=${username.trim()}`);
     const searchUsers = searchResponse.data.items;
 
+    // 2. For each user found, fetch their detailed profile information
+    // We use Promise.all to run these requests concurrently for better performance
     const detailedUserPromises = searchUsers.map(user =>
       axios.get(user.url).then(res => res.data)
     );
 
+    // 3. Wait for all detailed user requests to complete
     const detailedUsers = await Promise.all(detailedUserPromises);
 
-    const hasMore = searchUsers.length === perPage;
-
-    return { users: detailedUsers, hasMore };
+    // 4. Return the array of detailed user objects
+    return detailedUsers;
   } catch (err) {
-    throw new Error("Looks like we can't find any users with those criteria.");
+    console.error("API Error:", err);
+    // Provide a user-friendly error message
+    throw new Error("Looks like we can't find any users with that username. Please try again.");
   }
 };

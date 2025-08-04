@@ -6,7 +6,7 @@ import React from 'react';
 /**
  * The core API service function to fetch user data.
  * It fetches a list of users, then gets detailed data for each user.
- * This function is defined within the main application file to simplify the structure.
+ * This function is now defined within the main application file to simplify the structure and fix the import error.
  * @param {string} username - The username to search for.
  * @returns {Promise<Object>} A promise that resolves with an object containing the user results.
  */
@@ -27,7 +27,7 @@ const fetchUserData = async (username) => {
 
     const detailedUsers = await Promise.all(detailedUserPromises);
 
-    return { users: detailedUsers };
+    return detailedUsers;
   } catch (err) {
     console.error("API Error:", err);
     throw new Error("Looks like we can't find any users with that username. Please try again.");
@@ -94,7 +94,8 @@ const Search = () => {
     setSearchResults([]);
 
     try {
-      const { users } = await fetchUserData(username);
+      // Call the fetchUserData function which is defined in this same file
+      const users = await fetchUserData(username);
       setSearchResults(users);
     } catch (err) {
       setError(err.message);
