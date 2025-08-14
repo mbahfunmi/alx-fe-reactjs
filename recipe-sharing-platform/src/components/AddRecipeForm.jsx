@@ -4,24 +4,24 @@ import { Link, useNavigate } from 'react-router-dom';
 const AddRecipeForm = () => {
   const navigate = useNavigate();
 
-  // State to hold form data, now with 'steps' instead of 'instructions'
+  // State to hold form data, with 'steps' as the key
   const [formData, setFormData] = useState({
     title: '',
     ingredients: '',
-    steps: '', // Corrected state key
+    steps: '',
     image: ''
   });
 
   // State to hold validation errors
   const [errors, setErrors] = useState({});
 
-  // Handle input changes, using destructuring from e.target
+  // Handle input changes, using the full 'event.target'
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevData => ({ ...prevData, [name]: value }));
   };
 
-  // Simple validation logic, updated for 'steps'
+  // Simple validation logic
   const validateForm = () => {
     const newErrors = {};
     if (!formData.title.trim()) {
