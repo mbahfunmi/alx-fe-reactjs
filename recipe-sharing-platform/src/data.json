@@ -3,24 +3,88 @@
     "id": 1,
     "title": "Spaghetti Carbonara",
     "summary": "A classic Italian pasta dish with eggs, cheese, bacon, and black pepper.",
-    "image": "https://plus.unsplash.com/premium_photo-1674511582428-58ce834ce172?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c3BhZ2hldHRpJTIwY2FyYm9uYXJhfGVufDB8fDB8fHww"
+    "image": "https://images.unsplash.com/photo-1579684947550-cac28e932c66?q=80&w=600&h=400",
+    "ingredients": [
+      "200g spaghetti",
+      "150g guanciale (or pancetta)",
+      "2 large eggs",
+      "50g Pecorino Romano cheese",
+      "Freshly ground black pepper"
+    ],
+    "instructions": [
+      "Cook the spaghetti according to package directions.",
+      "While the pasta cooks, cut the guanciale into small cubes and fry until crispy. Remove the guanciale and set aside, keeping the rendered fat in the pan.",
+      "In a bowl, whisk the eggs and mix in the grated Pecorino Romano and a generous amount of black pepper.",
+      "Drain the spaghetti, reserving some of the pasta water. Add the spaghetti to the pan with the guanciale fat.",
+      "Remove the pan from the heat. Pour the egg and cheese mixture over the pasta, tossing quickly to coat the spaghetti. Add a splash of pasta water if needed to create a creamy sauce. Stir in the crispy guanciale.",
+      "Serve immediately, garnished with extra Pecorino and black pepper."
+    ]
   },
   {
     "id": 2,
     "title": "Chicken Tikka Masala",
     "summary": "Chunks of grilled chicken (tikka) cooked in a smooth buttery & creamy tomato based gravy.",
-    "image": "https://plus.unsplash.com/premium_photo-1670191894591-bc501a33de0d?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y2hpY2tlbiUyMHRpa2thJTIwbWFzYWxhfGVufDB8fDB8fHww"
+    "image": "https://images.unsplash.com/photo-1588166524177-3e4b2d3e5e4d?q=80&w=600&h=400",
+    "ingredients": [
+      "500g chicken breast, cubed",
+      "2 tablespoons olive oil",
+      "1 large onion, chopped",
+      "2 cloves garlic, minced",
+      "1 teaspoon ginger, grated",
+      "1 can (400g) crushed tomatoes",
+      "200ml heavy cream",
+      "1 teaspoon garam masala",
+      "1 teaspoon paprika"
+    ],
+    "instructions": [
+      "Marinate chicken in yogurt and spices for at least 30 minutes.",
+      "Grill or pan-fry the chicken until cooked through.",
+      "In a large pan, sauté onion until soft. Add garlic and ginger, cook for 1 minute.",
+      "Stir in tomatoes, garam masala, and paprika. Simmer for 15 minutes.",
+      "Add the cooked chicken and heavy cream. Simmer for another 5 minutes.",
+      "Serve hot with rice or naan bread."
+    ]
   },
   {
     "id": 3,
     "title": "Classic Beef Burgers",
     "summary": "Juicy homemade beef patties with fresh vegetables and a toasted bun.",
-    "image": "https://plus.unsplash.com/premium_photo-1695285406569-e2ce4c46a5ae?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y2xhc3NpYyUyMGJlZWYlMjBidXJnZXJzfGVufDB8fDB8fHww"
+    "image": "https://images.unsplash.com/photo-1568901004128-44485542a42b?q=80&w=600&h=400",
+    "ingredients": [
+      "500g ground beef",
+      "1 tablespoon Worcestershire sauce",
+      "1/2 teaspoon garlic powder",
+      "Salt and black pepper to taste",
+      "4 burger buns",
+      "Toppings: lettuce, tomato, onion, cheese"
+    ],
+    "instructions": [
+      "Gently mix ground beef with Worcestershire sauce, garlic powder, salt, and pepper.",
+      "Form the mixture into four equally sized patties.",
+      "Grill or pan-fry the patties to your desired doneness.",
+      "Toast the burger buns.",
+      "Assemble the burgers with your favorite toppings."
+    ]
   },
   {
     "id": 4,
     "title": "Vegetable Stir-Fry",
     "summary": "A quick and healthy stir-fry with a variety of colorful vegetables and a savory sauce.",
-    "image": "https://plus.unsplash.com/premium_photo-1664475934279-2631a25c42ce?q=80&w=1160&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    "image": "https://images.unsplash.com/photo-1594246831034-71d3a4b7f7e9?q=80&w=600&h=400",
+    "ingredients": [
+      "2 tablespoons soy sauce",
+      "1 tablespoon sesame oil",
+      "1 teaspoon grated ginger",
+      "1 clove garlic, minced",
+      "2 cups mixed vegetables (broccoli, bell peppers, carrots, snap peas)",
+      "1 cup cooked rice"
+    ],
+    "instructions": [
+      "In a small bowl, whisk together soy sauce, sesame oil, ginger, and garlic.",
+      "Heat a large wok or skillet over high heat.",
+      "Add the mixed vegetables and stir-fry for 3-5 minutes until tender-crisp.",
+      "Pour the sauce over the vegetables and toss to coat.",
+      "Serve hot over a bed of rice."
+    ]
   }
 ]
