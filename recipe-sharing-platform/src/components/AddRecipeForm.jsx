@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const AddRecipeForm = () => {
-  const navigate = useNavigate();
-
-  // State to hold form data, with 'steps' as the key
+  // We've removed 'useNavigate' since it wasn't being used.
+  
   const [formData, setFormData] = useState({
     title: '',
     ingredients: '',
@@ -12,16 +11,13 @@ const AddRecipeForm = () => {
     image: ''
   });
 
-  // State to hold validation errors
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
 
-  // Handle input changes, using the full 'event.target'
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevData => ({ ...prevData, [name]: value }));
+    setFormData(prevData => ({ ...prevData, [e.target.name]: e.target.value }));
   };
 
-  // Simple validation logic
   const validateForm = () => {
     const newErrors = {};
     if (!formData.title.trim()) {
@@ -40,14 +36,20 @@ const AddRecipeForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
       console.log('New Recipe Submitted:', formData);
-      alert('Recipe submitted successfully! (Check the console)');
+      setSuccessMessage('Recipe submitted successfully! (Check the console)');
+      setFormData({
+        title: '',
+        ingredients: '',
+        steps: '',
+        image: ''
+      });
     } else {
       console.log('Form validation failed.');
+      setSuccessMessage('');
     }
   };
 
@@ -58,6 +60,11 @@ const AddRecipeForm = () => {
       </Link>
       <div className="bg-white rounded-lg shadow-lg p-6 md:p-10">
         <h1 className="text-4xl font-bold mb-6 text-center">Add a New Recipe</h1>
+        {successMessage && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
+            <span className="block sm:inline">{successMessage}</span>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title Field */}
           <div>
