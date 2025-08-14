@@ -2,27 +2,26 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const AddRecipeForm = () => {
-  // useNavigate is a hook for programmatic navigation.
   const navigate = useNavigate();
 
-  // State to hold form data
+  // State to hold form data, now with 'steps' instead of 'instructions'
   const [formData, setFormData] = useState({
     title: '',
     ingredients: '',
-    instructions: '',
+    steps: '', // Corrected state key
     image: ''
   });
 
   // State to hold validation errors
   const [errors, setErrors] = useState({});
 
-  // Handle input changes
+  // Handle input changes, using destructuring from e.target
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevData => ({ ...prevData, [name]: value }));
   };
 
-  // Simple validation logic
+  // Simple validation logic, updated for 'steps'
   const validateForm = () => {
     const newErrors = {};
     if (!formData.title.trim()) {
@@ -31,8 +30,8 @@ const AddRecipeForm = () => {
     if (!formData.ingredients.trim()) {
       newErrors.ingredients = 'Ingredients are required.';
     }
-    if (!formData.instructions.trim()) {
-      newErrors.instructions = 'Instructions are required.';
+    if (!formData.steps.trim()) {
+      newErrors.steps = 'Preparation steps are required.';
     }
     if (!formData.image.trim()) {
       newErrors.image = 'Image URL is required.';
@@ -45,13 +44,8 @@ const AddRecipeForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // For now, log the new recipe data to the console.
-      // In a real app, you would send this to a backend API.
       console.log('New Recipe Submitted:', formData);
       alert('Recipe submitted successfully! (Check the console)');
-      
-      // Optionally, navigate back to the home page after submission.
-      // navigate('/');
     } else {
       console.log('Form validation failed.');
     }
@@ -95,19 +89,19 @@ const AddRecipeForm = () => {
             {errors.ingredients && <p className="text-red-500 text-sm mt-1">{errors.ingredients}</p>}
           </div>
 
-          {/* Instructions Field */}
+          {/* Preparation Steps Field */}
           <div>
-            <label htmlFor="instructions" className="block text-gray-700 font-semibold mb-2">Preparation Steps (one per line)</label>
+            <label htmlFor="steps" className="block text-gray-700 font-semibold mb-2">Preparation Steps (one per line)</label>
             <textarea
-              id="instructions"
-              name="instructions"
-              value={formData.instructions}
+              id="steps"
+              name="steps"
+              value={formData.steps}
               onChange={handleChange}
               rows="7"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.instructions ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.steps ? 'border-red-500' : 'border-gray-300'}`}
               placeholder="e.g., 1. Mix ingredients together.&#10;2. Form patties."
             ></textarea>
-            {errors.instructions && <p className="text-red-500 text-sm mt-1">{errors.instructions}</p>}
+            {errors.steps && <p className="text-red-500 text-sm mt-1">{errors.steps}</p>}
           </div>
           
           {/* Image URL Field */}
