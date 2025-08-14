@@ -1,9 +1,13 @@
 // src/App.jsx
+import HomePage from './components/HomePage';
+import './index.css';
+
 function App() {
   return (
-    <div className="text-center p-4">
-      <h1 className="text-3xl font-bold text-blue-500">Hello, Tailwind!</h1>
+    <div className="App">
+      <HomePage />
     </div>
   );
 }
+
 export default App;
