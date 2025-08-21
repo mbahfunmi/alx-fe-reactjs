@@ -1,7 +1,9 @@
-import { Formik, Form, Field, ErrorMessage } from 'formik'
-import * as Yup from 'yup'
+// src/components/FormikForm.jsx
+// This file should contain ONLY the form logic for Formik.
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
-const API_URL = 'https://reqres.in/api/register'
+const API_URL = 'https://reqres.in/api/register';
 
 const Schema = Yup.object({
   firstName: Yup.string().trim().required('First name is required'),
@@ -12,14 +14,13 @@ const Schema = Yup.object({
     .oneOf([Yup.ref('password')], 'Passwords do not match')
     .required('Confirm your password'),
   terms: Yup.boolean().oneOf([true], 'You must accept the terms'),
-})
+});
 
 export default function FormikForm() {
   return (
     <div>
       <h2>Formik + Yup</h2>
       <p className="small">Formik manages state & validation; Yup defines the rules.</p>
-
       <Formik
         initialValues={{
           firstName: '',
@@ -32,20 +33,20 @@ export default function FormikForm() {
         validationSchema={Schema}
         onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
           try {
-            setStatus({ success: '', error: '' })
+            setStatus({ success: '', error: '' });
             const res = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: values.email, password: values.password })
-            })
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error || 'Registration failed')
-            setStatus({ success: `Registered! Token/ID: ${data.token || data.id || 'N/A'}` })
-            resetForm()
+              body: JSON.stringify({ email: values.email, password: values.password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Registration failed');
+            setStatus({ success: `Registered! Token/ID: ${data.token || data.id || 'N/A'}` });
+            resetForm();
           } catch (err) {
-            setStatus({ error: err.message })
+            setStatus({ error: err.message });
           } finally {
-            setSubmitting(false)
+            setSubmitting(false);
           }
         }}
       >
@@ -101,5 +102,5 @@ export default function FormikForm() {
         )}
       </Formik>
     </div>
-  )
+  );
 }

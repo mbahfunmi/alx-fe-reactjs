@@ -1,22 +1,24 @@
-import { useState } from 'react'
+// src/components/ControlledForm.jsx
+// This file should contain ONLY the form logic for controlled components.
+import React, { useState } from 'react';
 
-const API_URL = 'https://reqres.in/api/register'
+const API_URL = 'https://reqres.in/api/register';
 
-// Very simple email regex for demo purposes
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Simple email regex for demo purposes
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validate(values) {
-  const errors = {}
-  if (!values.firstName.trim()) errors.firstName = 'First name is required'
-  if (!values.lastName.trim()) errors.lastName = 'Last name is required'
-  if (!values.email.trim()) errors.email = 'Email is required'
-  else if (!emailRegex.test(values.email)) errors.email = 'Enter a valid email'
-  if (!values.password) errors.password = 'Password is required'
-  else if (values.password.length < 6) errors.password = 'Min 6 characters'
-  if (!values.confirmPassword) errors.confirmPassword = 'Confirm your password'
-  else if (values.confirmPassword !== values.password) errors.confirmPassword = 'Passwords do not match'
-  if (!values.terms) errors.terms = 'You must accept the terms'
-  return errors
+  const errors = {};
+  if (!values.firstName.trim()) errors.firstName = 'First name is required';
+  if (!values.lastName.trim()) errors.lastName = 'Last name is required';
+  if (!values.email.trim()) errors.email = 'Email is required';
+  else if (!emailRegex.test(values.email)) errors.email = 'Enter a valid email';
+  if (!values.password) errors.password = 'Password is required';
+  else if (values.password.length < 6) errors.password = 'Min 6 characters';
+  if (!values.confirmPassword) errors.confirmPassword = 'Confirm your password';
+  else if (values.confirmPassword !== values.password) errors.confirmPassword = 'Passwords do not match';
+  if (!values.terms) errors.terms = 'You must accept the terms';
+  return errors;
 }
 
 export default function ControlledForm() {
@@ -27,46 +29,44 @@ export default function ControlledForm() {
     password: '',
     confirmPassword: '',
     terms: false,
-  })
-  const [touched, setTouched] = useState({})
-  const [loading, setLoading] = useState(false)
-  const [status, setStatus] = useState({ success: '', error: '' })
+  });
+  const [touched, setTouched] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState({ success: '', error: '' });
 
-  const errors = validate(values)
+  const errors = validate(values);
 
   function handleChange(e) {
-    const { name, value, type, checked } = e.target
-    setValues(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+    const { name, value, type, checked } = e.target;
+    setValues(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   }
 
   function handleBlur(e) {
-    const { name } = e.target
-    setTouched(prev => ({ ...prev, [name]: true }))
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    // Mark all as touched to reveal any hidden errors
+    e.preventDefault();
     setTouched({
       firstName: true, lastName: true, email: true,
       password: true, confirmPassword: true, terms: true
-    })
-    if (Object.keys(errors).length) return
+    });
+    if (Object.keys(errors).length) return;
 
     try {
-      setLoading(true)
-      setStatus({ success: '', error: '' })
+      setLoading(true);
+      setStatus({ success: '', error: '' });
 
-      // Only email + password are needed for this mock register endpoint
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: values.email, password: values.password })
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Registration failed')
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
 
-      setStatus({ success: `Registered! Token/ID: ${data.token || data.id || 'N/A'}`, error: '' })
+      setStatus({ success: `Registered! Token/ID: ${data.token || data.id || 'N/A'}`, error: '' });
       setValues({
         firstName: '',
         lastName: '',
@@ -74,22 +74,22 @@ export default function ControlledForm() {
         password: '',
         confirmPassword: '',
         terms: false,
-      })
-      setTouched({})
+      });
+      setTouched({});
     } catch (err) {
-      setStatus({ success: '', error: err.message })
+      setStatus({ success: '', error: err.message });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  const showError = (field) => touched[field] && errors[field]
+  const showError = (field) => touched[field] && errors[field];
 
   return (
     <form onSubmit={handleSubmit} noValidate>
       <h2>Controlled Components</h2>
       <p className="small">Manually manage state with <code>useState</code>.</p>
-
+      
       {status.success && <div className="success" role="status" aria-live="polite">{status.success}</div>}
       {status.error && <div className="error" role="alert" aria-live="assertive">{status.error}</div>}
 
@@ -161,5 +161,5 @@ export default function ControlledForm() {
         <span className="small">Uses fetch → Reqres mock API</span>
       </div>
     </form>
-  )
+  );
 }
