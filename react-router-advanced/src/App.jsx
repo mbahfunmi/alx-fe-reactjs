@@ -8,12 +8,12 @@ import {
   useNavigate,
   Navigate,
 } from 'react-router-dom';
-import { ProfilePage } from './components/Profile.jsx';
+import { ProfilePage, ProfileDetails, ProfileSettings } from './components/Profile.jsx';
 
 // A simple utility to simulate authentication status.
 let isUserAuthenticated = false;
 
-// Home page
+// A component for the Home page.
 function HomePage() {
   return (
     <div className="p-8">
@@ -23,7 +23,7 @@ function HomePage() {
   );
 }
 
-// About page
+// A component for the About page.
 function AboutPage() {
   return (
     <div className="p-8">
@@ -33,28 +33,40 @@ function AboutPage() {
   );
 }
 
-// Dynamic user dashboard
+// A component to display a dynamic user dashboard.
 function UserDashboard() {
   const { userId } = useParams();
+  
   return (
     <div className="p-8 bg-gray-100 rounded-lg shadow-inner">
       <h2 className="text-2xl font-bold mb-2">User Dashboard</h2>
+      <p className="text-lg">Showing content for user: <span className="font-mono text-blue-600">{userId}</span></p>
+    </div>
+  );
+}
+
+// A dynamic route to display individual blog posts.
+function BlogPost() {
+  const { id } = useParams();
+  return (
+    <div className="p-8 bg-yellow-100 rounded-lg shadow-inner">
+      <h2 className="text-2xl font-bold mb-2">Blog Post</h2>
       <p className="text-lg">
-        Showing content for user:{" "}
-        <span className="font-mono text-blue-600">{userId}</span>
+        Displaying blog post with ID:{" "}
+        <span className="font-mono text-blue-600">{id}</span>
       </p>
     </div>
   );
 }
 
-// Login page
+// The component for the Login page.
 function LoginPage({ onLogin }) {
   const navigate = useNavigate();
 
   const handleLogin = () => {
     isUserAuthenticated = true;
     onLogin(true);
-    navigate("/profile");
+    navigate('/profile');
   };
 
   return (
@@ -71,7 +83,7 @@ function LoginPage({ onLogin }) {
   );
 }
 
-// Protected Route component
+// A simple component to handle redirects for protected routes.
 function ProtectedRoute({ children }) {
   if (!isUserAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -79,7 +91,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// Main App
+// The main application component that sets up all the routing.
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -95,6 +107,7 @@ export default function App() {
             <li><Link to="/" className="hover:text-gray-300">Home</Link></li>
             <li><Link to="/about" className="hover:text-gray-300">About</Link></li>
             <li><Link to="/users/123" className="hover:text-gray-300">User 123</Link></li>
+            <li><Link to="/blog/42" className="hover:text-gray-300">Blog 42</Link></li>
             <li><Link to="/profile" className="hover:text-gray-300">Profile</Link></li>
             {!isAuthenticated && <li><Link to="/login" className="hover:text-gray-300">Login</Link></li>}
             {isAuthenticated && (
@@ -118,23 +131,26 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/login" element={<LoginPage onLogin={handleAuthChange} />} />
+            
             <Route path="/users/:userId" element={<UserDashboard />} />
+            <Route path="/blog/:id" element={<BlogPost />} />
 
-            {/* Protected Profile Route with Nested Routing */}
-            <Route
-              path="/profile/*"
+            <Route 
+              path="/profile" 
               element={
                 <ProtectedRoute>
                   <ProfilePage />
                 </ProtectedRoute>
               }
-            />
-
-            {/* Catch-all */}
+            >
+              <Route path="details" element={<ProfileDetails />} />
+              <Route path="settings" element={<ProfileSettings />} />
+            </Route>
+            
             <Route path="*" element={<h1 className="text-4xl text-center mt-12">404: Not Found</h1>} />
           </Routes>
         </main>
-      </div>
+      </div>S
     </Router>
   );
 }
