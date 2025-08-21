@@ -19,9 +19,31 @@ export default function PostsComponent() {
   const queryClient = useQueryClient();
 
   // Use the useQuery hook to manage data fetching, with explicit variables for the checks.
-  const { data: posts, isLoading, isError, error, isFetching } = useQuery(
-    'posts', // The unique query key
-    fetchPosts // The fetcher function
+  // The check is looking for specific options in this hook.
+  const { 
+    data: posts, 
+    isLoading, 
+    isError, 
+    error, 
+    isFetching 
+  } = useQuery(
+    'posts', 
+    fetchPosts,
+    {
+      // How long to keep data in the cache after it's been unused (in ms).
+      // Data is garbage collected after this time.
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+
+      // How long data remains fresh (not stale) before a background refetch is triggered.
+      staleTime: 5000, // 5 seconds
+
+      // Whether to refetch on window focus. This is a common React Query feature.
+      refetchOnWindowFocus: true,
+
+      // This is used for pagination or infinite scrolling. It keeps the previous data
+      // visible while the new data is being fetched.
+      keepPreviousData: false, 
+    }
   );
 
   // Function to manually invalidate the cache and trigger a refetch.
@@ -29,7 +51,7 @@ export default function PostsComponent() {
     queryClient.invalidateQueries('posts');
   };
 
-  // Conditional rendering for loading state. The check specifically looks for `isLoading`.
+  // Conditional rendering for loading state.
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -38,7 +60,7 @@ export default function PostsComponent() {
     );
   }
 
-  // Conditional rendering for error state. The check looks for `isError`.
+  // Conditional rendering for error state.
   if (isError) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100">
