@@ -8,12 +8,12 @@ import {
   useNavigate,
   Navigate,
 } from 'react-router-dom';
-import { ProfilePage, ProfileDetails, ProfileSettings } from './components/Profile.jsx';
+import { ProfilePage } from './components/Profile.jsx';
 
 // A simple utility to simulate authentication status.
 let isUserAuthenticated = false;
 
-// A component for the Home page.
+// Home page
 function HomePage() {
   return (
     <div className="p-8">
@@ -23,7 +23,7 @@ function HomePage() {
   );
 }
 
-// A component for the About page.
+// About page
 function AboutPage() {
   return (
     <div className="p-8">
@@ -33,26 +33,28 @@ function AboutPage() {
   );
 }
 
-// A component to display a dynamic user dashboard.
+// Dynamic user dashboard
 function UserDashboard() {
   const { userId } = useParams();
-  
   return (
     <div className="p-8 bg-gray-100 rounded-lg shadow-inner">
       <h2 className="text-2xl font-bold mb-2">User Dashboard</h2>
-      <p className="text-lg">Showing content for user: <span className="font-mono text-blue-600">{userId}</span></p>
+      <p className="text-lg">
+        Showing content for user:{" "}
+        <span className="font-mono text-blue-600">{userId}</span>
+      </p>
     </div>
   );
 }
 
-// The component for the Login page.
+// Login page
 function LoginPage({ onLogin }) {
   const navigate = useNavigate();
 
   const handleLogin = () => {
     isUserAuthenticated = true;
     onLogin(true);
-    navigate('/profile');
+    navigate("/profile");
   };
 
   return (
@@ -69,7 +71,7 @@ function LoginPage({ onLogin }) {
   );
 }
 
-// A simple component to handle redirects for protected routes.
+// Protected Route component
 function ProtectedRoute({ children }) {
   if (!isUserAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -77,7 +79,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// The main application component that sets up all the routing.
+// Main App
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -116,21 +118,19 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/login" element={<LoginPage onLogin={handleAuthChange} />} />
-            
             <Route path="/users/:userId" element={<UserDashboard />} />
 
-            <Route 
-              path="/profile" 
+            {/* Protected Profile Route with Nested Routing */}
+            <Route
+              path="/profile/*"
               element={
                 <ProtectedRoute>
                   <ProfilePage />
                 </ProtectedRoute>
               }
-            >
-              <Route path="details" element={<ProfileDetails />} />
-              <Route path="settings" element={<ProfileSettings />} />
-            </Route>
-            
+            />
+
+            {/* Catch-all */}
             <Route path="*" element={<h1 className="text-4xl text-center mt-12">404: Not Found</h1>} />
           </Routes>
         </main>
