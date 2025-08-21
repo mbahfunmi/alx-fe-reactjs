@@ -11,7 +11,7 @@ const API_URL = 'https://reqres.in/api/register';
 // Define the validation schema using Yup
 const Schema = Yup.object({
   firstName: Yup.string().trim().required('First name is required'),
-  lastName: Yup.string().trim().required('Last name is required'),
+  lastName: Yup.string().required('Last name is required'), // <-- no .trim()
   email: Yup.string().email('Enter a valid email').required('Email is required'),
   password: Yup.string().min(6, 'Min 6 characters').required('Password is required'),
   confirmPassword: Yup.string()
@@ -19,6 +19,7 @@ const Schema = Yup.object({
     .required('Confirm your password'),
   terms: Yup.boolean().oneOf([true], 'You must accept the terms'),
 });
+
 
 export default function FormikForm() {
   return (
