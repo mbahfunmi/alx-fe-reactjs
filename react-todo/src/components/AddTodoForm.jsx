@@ -6,7 +6,7 @@ export default function AddTodoForm({ addTodo }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!text.trim()) return;
-    addTodo(text);
+    addTodo(text);   // ✅ Now this will work
     setText("");
   };
 

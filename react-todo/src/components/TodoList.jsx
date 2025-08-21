@@ -26,7 +26,8 @@ export default function TodoList() {
   return (
     <div>
       <h2>Todo List</h2>
-      <AddTodoForm onAddTodo={addTodo} />
+      {/* ✅ Fix: pass addTodo not onAddTodo */}
+      <AddTodoForm addTodo={addTodo} />  
       <ul>
         {todos.map((todo) => (
           <li key={todo.id}>
