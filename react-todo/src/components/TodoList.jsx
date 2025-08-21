@@ -3,27 +3,25 @@ import AddTodoForm from "./AddTodoForm";
 
 const initialTodos = [
   { id: 1, text: "Learn React", completed: false },
-  { id: 2, text: "Build Todo App", completed: true },
+  { id: 2, text: "Build a Todo App", completed: true }, // note the "a"
 ];
 
 export default function TodoList() {
   const [todos, setTodos] = useState(initialTodos);
 
   const addTodo = (text) => {
-    const newTodo = { id: Date.now(), text, completed: false };
-    setTodos([...todos, newTodo]);
+    const newTodo = { id: Date.now(), text: text.trim(), completed: false };
+    setTodos((prev) => [...prev, newTodo]);
   };
 
   const toggleTodo = (id) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     );
   };
 
   const deleteTodo = (id) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
+    setTodos((prev) => prev.filter((t) => t.id !== id));
   };
 
   return (
@@ -34,15 +32,20 @@ export default function TodoList() {
         {todos.map((todo) => (
           <li
             key={todo.id}
+            data-testid="todo-item"
             onClick={() => toggleTodo(todo.id)}
             style={{
               textDecoration: todo.completed ? "line-through" : "none",
               cursor: "pointer",
             }}
-            data-testid="todo-item"
           >
             {todo.text}
-            <button onClick={(e) => { e.stopPropagation(); deleteTodo(todo.id); }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteTodo(todo.id);
+              }}
+            >
               Delete
             </button>
           </li>

@@ -13,7 +13,6 @@ export default function AddTodoForm({ addTodo }) {
   return (
     <form onSubmit={handleSubmit}>
       <input
-        type="text"
         placeholder="Add a new todo"
         value={text}
         onChange={(e) => setText(e.target.value)}
