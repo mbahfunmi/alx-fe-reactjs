@@ -1,10 +1,8 @@
 // src/components/ControlledForm.jsx
-// This file should contain ONLY the form logic for controlled components.
 import React, { useState } from 'react';
 
 const API_URL = 'https://reqres.in/api/register';
 
-// Simple email regex for demo purposes
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validate(values) {
@@ -102,7 +100,7 @@ export default function ControlledForm() {
         />
         {showError('firstName') && <div className="error">{errors.firstName}</div>}
       </div>
-
+      {/* ... rest of the form fields ... */}
       <div className="form-row">
         <label htmlFor="lastName">Last Name</label>
         <input

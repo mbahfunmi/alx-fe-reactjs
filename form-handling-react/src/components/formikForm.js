@@ -1,10 +1,14 @@
-// src/components/FormikForm.jsx
-// This file should contain ONLY the form logic for Formik.
+// src/components/formikForm.js
+// This file is the refactored form using Formik and Yup for validation.
+
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import React from 'react';
 
+// This is the mock API endpoint
 const API_URL = 'https://reqres.in/api/register';
 
+// Define the validation schema using Yup
 const Schema = Yup.object({
   firstName: Yup.string().trim().required('First name is required'),
   lastName: Yup.string().trim().required('Last name is required'),

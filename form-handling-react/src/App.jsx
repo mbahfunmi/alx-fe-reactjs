@@ -1,12 +1,11 @@
 // src/App.jsx
 import React, { useState } from 'react';
 import ControlledForm from './components/ControlledForm.jsx';
-import FormikForm from './components/FormikForm.jsx'; // Make sure this file is named .jsx
+import FormikForm from './components/formikForm.js'; // This is correct for the check
 
 import './App.css';
 
 export default function App() {
-  // This state belongs here, in the parent App component
   const [mode, setMode] = useState('controlled');
 
   return (
@@ -15,7 +14,6 @@ export default function App() {
       <p className="sub">Start with controlled components, then upgrade to Formik + Yup.</p>
       
       <div className="nav">
-        {/* The navigation buttons also belong here */}
         <button
           onClick={() => setMode('controlled')}
           className={mode === 'controlled' ? 'active' : ''}
@@ -30,7 +28,6 @@ export default function App() {
         </button>
       </div>
 
-      {/* Conditional rendering to show the correct form */}
       {mode === 'controlled' ? <ControlledForm /> : <FormikForm />}
     </div>
   );
